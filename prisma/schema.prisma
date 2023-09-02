@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model BLogPosts {
+
+  id String @default(uuid()) @unique
+
+  title String 
+  description String?
+  userId String
+  User User @relation(fields: [userId] , references: [id],onUpdate:Cascade, onDelete: Cascade )
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime @updatedAt
+
+  Images Images[]
+  categoriesOnPosts CategoriesOnPosts[]
+
+  LikesPost LikePosts[]
+  Comments Comments[]
+  Replies Replies[]  
+  Share SharePost[]
+
+}
+
+model Categories {
+
+  id String @default(uuid()) @unique
+
+  title String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  PostsOnCategories CategoriesOnPosts[]
+
+}
+
+model CategoriesOnPosts{  // pivot table
+
+  blogPost BLogPosts @relation(references: [id],fields: [blogPostId],onUpdate: Cascade,onDelete: Cascade)
+  blogPostId String
+
+  category Categories @relation(references: [id],fields: [categoryId],onUpdate: Cascade,onDelete: Cascade)
+  categoryId String
+  
+  @@id([blogPostId,categoryId]) 
+}
+
+model User {
+  id String @default(uuid()) @unique
+
+  email String @unique
+  password String
+
+  firstname String
+  lastname String
+
+  BlogPosts BLogPosts[]
+  LikePosts LikePosts[]
+  Comments Comments[]
+  Replies Replies[]
+  share SharePost[]
+}
+
+model Images {
+
+  id String @default(uuid()) @unique
+
+  blogPostId String
+  blogPosts BLogPosts @relation(fields: [blogPostId],references: [id],onUpdate: Cascade,onDelete: Cascade)
+  imageUrl String
+
+  createdAt DateTime @default(now())
+}
+
+model LikePosts {
+
+  id String @default(uuid()) @unique
+
+  userId String
+  User User @relation(fields: [userId],references: [id],onUpdate: Cascade,onDelete: Cascade)
+
+  blogPostId String
+  blogPost BLogPosts @relation(fields: [blogPostId],references: [id],onUpdate: Cascade,onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([userId,blogPostId])
+  @@map("like_user")
+}
+
+model Comments {
+
+  id String @default(uuid()) @unique
+
+  text String 
+
+  userId String
+  User User @relation(references: [id] , fields: [userId],onUpdate: Cascade,onDelete: Cascade)
+
+  blogPostId String
+  BlogPosts BLogPosts @relation(fields: [blogPostId],references: [id],onUpdate: Cascade,onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Replies Replies[]
+
+  @@id([userId,blogPostId])
+}
+
+model Replies {
+
+  id String @default(uuid()) @unique
+
+  text String
+
+  userId String
+  User User @relation(references: [id],fields: [userId],onUpdate: Cascade,onDelete:Cascade )
+
+  commentId String
+  Comment Comments @relation(references: [id],fields: [commentId],onUpdate: Cascade,onDelete: Cascade)
+
+  blogPostId String
+  blogPosts BLogPosts @relation(references: [id],fields:[blogPostId],onUpdate: Cascade ,onDelete: Cascade)
+  
+  @@id([userId,blogPostId,commentId])
+}
+
+model SharePost {
+
+  id String @default(uuid()) @unique
+
+  UserId String
+  User User @relation(fields: [UserId],references: [id],onUpdate: Cascade,onDelete: Cascade)
+
+  BlogPostId String
+  BlogPost BLogPosts @relation(fields: [BlogPostId],references: [id],onUpdate: Cascade,onDelete: Cascade)
+
+  @@id([UserId,BlogPostId])
+
+} 
